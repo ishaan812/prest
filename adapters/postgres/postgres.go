@@ -88,18 +88,18 @@ func (s *Stmt) Prepare(db *sqlx.DB, tx *sql.Tx, SQL string) (statement *sql.Stmt
 func Load() {
 	config.PrestConf.Adapter = &Postgres{}
 
-	if connection.GetDatabase() == "" {
-		connection.SetDatabase(config.PrestConf.PGDatabase)
-	}
+	// if connection.GetDatabase() == "" {
+	// 	connection.SetDatabase(config.PrestConf.PGDatabase)
+	// }
 
-	db, err := connection.Get()
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = db.Ping()
-	if err != nil {
-		log.Fatal(err)
-	}
+	// db, err := connection.Get()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// err = db.Ping()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 }
 
 func init() {

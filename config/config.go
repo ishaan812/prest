@@ -124,6 +124,7 @@ var (
 
 // Load configuration
 func Load() {
+	parseTenantConfig("./tenantConfig.json")
 	viperCfg()
 	PrestConf = &Prest{}
 	Parse(PrestConf)
@@ -270,11 +271,11 @@ func Parse(cfg *Prest) {
 	cfg.SSLRootCert = viper.GetString("ssl.rootcert")
 
 	parseSSLData(cfg)
-	if os.Getenv("DATABASE_URL") != "" {
-		// cloud factor support: https://devcenter.heroku.com/changelog-items/438
-		cfg.PGURL = os.Getenv("DATABASE_URL")
-	}
-	parseDatabaseURL(cfg)
+	// if os.Getenv("DATABASE_URL") != "" {
+	// 	// cloud factor support: https://devcenter.heroku.com/changelog-items/438
+	// 	cfg.PGURL = os.Getenv("DATABASE_URL")
+	// }
+	// parseDatabaseURL(cfg)
 	cfg.PGMaxIdleConn = viper.GetInt("pg.maxidleconn")
 	cfg.PGMaxOpenConn = viper.GetInt("pg.maxopenconn")
 	cfg.PGConnTimeout = viper.GetInt("pg.conntimeout")
@@ -367,9 +368,9 @@ func parseDatabaseURL(cfg *Prest) {
 		cfg.PGPass = pgPass
 	}
 	cfg.PGDatabase = strings.Replace(u.Path, "/", "", -1)
-	if u.Query().Get("sslmode") != "" {
-		cfg.SSLMode = u.Query().Get("sslmode")
-	}
+	// if u.Query().Get("sslmode") != "" {
+	// 	cfg.SSLMode = u.Query().Get("sslmode")
+	// }
 }
 
 // fetchJWKS tries to get the JWKS from the URL in the config

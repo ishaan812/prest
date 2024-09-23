@@ -26,6 +26,7 @@ type Pool struct {
 // GetURI postgres connection URI
 func GetURI(DBName string) string {
 	var dbURI string
+	fmt.Println("DBName: ", DBName)
 
 	if DBName == "" {
 		DBName = config.PrestConf.PGDatabase
@@ -52,6 +53,11 @@ func GetURI(DBName string) string {
 	}
 
 	return dbURI
+}
+
+// getting URI with tenant
+func GetTenantURI(tenantName string) string {
+	return config.GetTenantDbUrl(tenantName)
 }
 
 // Get get Postgres connection adding it to the pool if needed
@@ -91,6 +97,7 @@ func GetPool() *Pool {
 
 func getDatabaseFromPool(name string) *sqlx.DB {
 	var DB *sqlx.DB
+	fmt.Println("GET")
 	p := GetPool()
 
 	p.Mtx.Lock()
@@ -101,8 +108,9 @@ func getDatabaseFromPool(name string) *sqlx.DB {
 }
 
 // AddDatabaseToPool create and add connection to the pool
-func AddDatabaseToPool(name string) (*sqlx.DB, error) {
-	DB, err := sqlx.Connect("postgres", GetURI(name))
+func AddDatabaseToPool(tenantName string) (*sqlx.DB, error) {
+	fmt.Println("ADD")
+	DB, err := sqlx.Connect("postgres", GetURI(tenantName))
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +120,7 @@ func AddDatabaseToPool(name string) (*sqlx.DB, error) {
 	p := GetPool()
 
 	p.Mtx.Lock()
-	p.DB[GetURI(name)] = DB
+	p.DB[GetURI(tenantName)] = DB
 	p.Mtx.Unlock()
 	return DB, nil
 }

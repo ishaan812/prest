@@ -44,3 +44,4 @@ docbuild/
 /vendor
 .clj-kondo
 *debug*
+tenantConfig.json
