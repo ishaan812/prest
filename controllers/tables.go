@@ -167,7 +167,6 @@ func SelectFromTables(w http.ResponseWriter, r *http.Request) {
 	}
 	// _count_first: query string
 	countFirst := false
-	fmt.Println("HERE")
 	if countQuery != "" {
 		query = config.PrestConf.Adapter.SelectSQL(countQuery, database, schema, table)
 		// count returns a list, passing this parameter will return the first
@@ -176,7 +175,6 @@ func SelectFromTables(w http.ResponseWriter, r *http.Request) {
 			countFirst = true
 		}
 	}
-	fmt.Println("HERE")
 
 	// sql query formatting if there is a join (inner, left, ...) rule
 	joinValues, err := config.PrestConf.Adapter.JoinByRequest(r)

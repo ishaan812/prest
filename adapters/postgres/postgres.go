@@ -1702,5 +1702,5 @@ func getDBFromCtx(ctx context.Context) (db *sqlx.DB, err error) {
 		}
 		return connection.AddDatabaseToPool(dbName)
 	}
-	return connection.Get()
+	return nil, errors.New("database name not set in context")
 }
