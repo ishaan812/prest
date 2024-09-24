@@ -40,8 +40,8 @@ func Execute() {
 	migrateCmd.AddCommand(resetCmd)
 	RootCmd.AddCommand(versionCmd)
 	RootCmd.AddCommand(migrateCmd)
-	// migrateCmd.PersistentFlags().StringVar(&urlConn, "url", driverURL(), "Database driver url")
-	// migrateCmd.PersistentFlags().StringVar(&path, "path", config.PrestConf.MigrationsPath, "Migrations directory")
+	migrateCmd.PersistentFlags().StringVar(&urlConn, "url", driverURL(), "Database driver url")
+	migrateCmd.PersistentFlags().StringVar(&path, "path", config.PrestConf.MigrationsPath, "Migrations directory")
 	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)

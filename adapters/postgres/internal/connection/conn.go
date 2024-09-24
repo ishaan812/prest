@@ -95,13 +95,12 @@ func GetPool() *Pool {
 	return pool
 }
 
-func getDatabaseFromPool(name string) *sqlx.DB {
+func getDatabaseFromPool(tenantName string) *sqlx.DB {
 	var DB *sqlx.DB
-	fmt.Println("GET")
 	p := GetPool()
 
 	p.Mtx.Lock()
-	DB = p.DB[GetURI(name)]
+	DB = p.DB[tenantName]
 	p.Mtx.Unlock()
 
 	return DB
@@ -109,9 +108,10 @@ func getDatabaseFromPool(name string) *sqlx.DB {
 
 // AddDatabaseToPool create and add connection to the pool
 func AddDatabaseToPool(tenantName string) (*sqlx.DB, error) {
-	fmt.Println("ADD")
-	DB, err := sqlx.Connect("postgres", GetURI(tenantName))
+	DB, err := sqlx.Connect("postgres", GetTenantURI(tenantName))
 	if err != nil {
+		//error here
+		fmt.Println(err)
 		return nil, err
 	}
 	DB.SetMaxIdleConns(config.PrestConf.PGMaxIdleConn)
@@ -120,7 +120,7 @@ func AddDatabaseToPool(tenantName string) (*sqlx.DB, error) {
 	p := GetPool()
 
 	p.Mtx.Lock()
-	p.DB[GetURI(tenantName)] = DB
+	p.DB[tenantName] = DB
 	p.Mtx.Unlock()
 	return DB, nil
 }

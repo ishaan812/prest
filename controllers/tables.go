@@ -61,12 +61,11 @@ func GetTablesByDatabaseAndSchema(w http.ResponseWriter, r *http.Request) {
 	database := vars["database"]
 	schema := vars["schema"]
 
-	if config.PrestConf.SingleDB && (config.PrestConf.Adapter.GetDatabase() != database) {
-		err := fmt.Errorf("database not registered: %v", database)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
+	// if config.PrestConf.SingleDB && (config.PrestConf.Adapter.GetDatabase() != database) {
+	// 	err := fmt.Errorf("database not registered: %v", database)
+	// 	http.Error(w, err.Error(), http.StatusBadRequest)
+	// 	return
+	// }
 	requestWhere, values, err := config.PrestConf.Adapter.WhereByRequest(r, 3)
 	if err != nil {
 		err = fmt.Errorf("could not perform WhereByRequest: %v", err)
@@ -98,7 +97,7 @@ func GetTablesByDatabaseAndSchema(w http.ResponseWriter, r *http.Request) {
 	valuesAux = append(valuesAux, database, schema)
 	valuesAux = append(valuesAux, values...)
 
-	// set db name on ctx
+	// set tenant name on ctx
 	ctx := context.WithValue(r.Context(), pctx.DBNameKey, database)
 
 	timeout, _ := ctx.Value(pctx.HTTPTimeoutKey).(int)
@@ -122,11 +121,11 @@ func SelectFromTables(w http.ResponseWriter, r *http.Request) {
 	table := vars["table"]
 	queries := r.URL.Query()
 
-	if config.PrestConf.SingleDB && (config.PrestConf.Adapter.GetDatabase() != database) {
-		err := fmt.Errorf("database not registered: %v", database)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+	// if config.PrestConf.SingleDB && (config.PrestConf.Adapter.GetDatabase() != database) {
+	// 	err := fmt.Errorf("database not registered: %v", database)
+	// 	http.Error(w, err.Error(), http.StatusBadRequest)
+	// 	return
+	// }
 
 	// get selected columns, "*" if empty "_columns"
 	cols, err := config.PrestConf.Adapter.FieldsPermissions(r, table, "read")
@@ -168,6 +167,7 @@ func SelectFromTables(w http.ResponseWriter, r *http.Request) {
 	}
 	// _count_first: query string
 	countFirst := false
+	fmt.Println("HERE")
 	if countQuery != "" {
 		query = config.PrestConf.Adapter.SelectSQL(countQuery, database, schema, table)
 		// count returns a list, passing this parameter will return the first
@@ -176,6 +176,7 @@ func SelectFromTables(w http.ResponseWriter, r *http.Request) {
 			countFirst = true
 		}
 	}
+	fmt.Println("HERE")
 
 	// sql query formatting if there is a join (inner, left, ...) rule
 	joinValues, err := config.PrestConf.Adapter.JoinByRequest(r)
@@ -478,18 +479,12 @@ func UpdateTable(w http.ResponseWriter, r *http.Request) {
 // ShowTable show information from table
 func ShowTable(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	database := vars["database"]
+	tenantId := vars["database"] // tenantId
 	schema := vars["schema"]
 	table := vars["table"]
 
-	if config.PrestConf.SingleDB && (config.PrestConf.Adapter.GetDatabase() != database) {
-		err := fmt.Errorf("database not registered: %v", database)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
 	// set db name on ctx
-	ctx := context.WithValue(r.Context(), pctx.DBNameKey, database)
+	ctx := context.WithValue(r.Context(), pctx.DBNameKey, tenantId)
 
 	timeout, _ := ctx.Value(pctx.HTTPTimeoutKey).(int)
 	ctx, cancel := context.WithTimeout(ctx, time.Second*time.Duration(timeout))
