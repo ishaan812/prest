@@ -12,6 +12,8 @@ RUN go mod vendor && \
 FROM registry.hub.docker.com/library/debian:bookworm
 RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
 ENV PREST_BUILD_PLUGINS 0
+COPY --from=builder /workspace/prest.toml /app/prest.toml
+COPY --from=builder /workspace/tenantConfig.json /app/tenantConfig.json
 COPY --from=builder /bin/nc /bin/nc
 COPY --from=builder /workspace/prestd /bin/prestd
 COPY --from=builder /workspace/etc/entrypoint.sh /app/entrypoint.sh
