@@ -354,11 +354,11 @@ func DeleteFromTable(w http.ResponseWriter, r *http.Request) {
 	schema := vars["schema"]
 	table := vars["table"]
 
-	if config.PrestConf.SingleDB && (config.PrestConf.Adapter.GetDatabase() != database) {
-		err := fmt.Errorf("database not registered: %v", database)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+	// if config.PrestConf.SingleDB && (config.PrestConf.Adapter.GetDatabase() != database) {
+	// 	err := fmt.Errorf("database not registered: %v", database)
+	// 	http.Error(w, err.Error(), http.StatusBadRequest)
+	// 	return
+	// }
 
 	where, values, err := config.PrestConf.Adapter.WhereByRequest(r, 1)
 	if err != nil {
@@ -412,11 +412,11 @@ func UpdateTable(w http.ResponseWriter, r *http.Request) {
 	schema := vars["schema"]
 	table := vars["table"]
 
-	if config.PrestConf.SingleDB && (config.PrestConf.Adapter.GetDatabase() != database) {
-		err := fmt.Errorf("database not registered: %v", database)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+	// if config.PrestConf.SingleDB && (config.PrestConf.Adapter.GetDatabase() != database) {
+	// 	err := fmt.Errorf("database not registered: %v", database)
+	// 	http.Error(w, err.Error(), http.StatusBadRequest)
+	// 	return
+	// }
 
 	setSyntax, values, err := config.PrestConf.Adapter.SetByRequest(r, 1)
 	if err != nil {
