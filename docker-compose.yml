@@ -1,7 +1,9 @@
 version: "3"
 services:
   prest:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     restart: on-failure
     environment:
       - PREST_DEBUG=true # remove comment to disable DEBUG mode
@@ -9,8 +11,5 @@ services:
       - PREST_PG_CACHE=false
       - PREST_JWT_DEFAULT=false # toggle to use jwt
       - PREST_CACHE_ENABLED=false
-    depends_on:
-      postgres:
-        condition: service_healthy
     ports:
       - "3000:3000"
