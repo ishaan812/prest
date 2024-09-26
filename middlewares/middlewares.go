@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -122,6 +123,25 @@ func AccessControl() negroni.Handler {
 	})
 }
 
+func CustomMiddleware() negroni.Handler {
+	return negroni.HandlerFunc(func(rw http.ResponseWriter, rq *http.Request, next http.HandlerFunc) {
+		authHeader := rq.Header.Get("Authorization")
+		if authHeader == "" {
+			SendErrorResponse(rw, 401, "No Auth Token Found")
+			return
+		}
+		tokenString := authHeader[len("Bearer "):]
+		token, err := VerifyToken(tokenString, []byte(config.PrestConf.JWTKey))
+		if err != nil {
+			return
+		}
+		fmt.Println("token => ", token.TenantID, token.Expiry)
+		ctx := context.WithValue(rq.Context(), "tenantId", token.TenantID)
+		rq = rq.WithContext(ctx)
+		next(rw, rq)
+	})
+}
+
 // JwtMiddleware check if actual request have JWT
 func JwtMiddleware(key string, JWKSet string) negroni.Handler {
 	return negroni.HandlerFunc(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
@@ -234,4 +254,51 @@ func ExposureMiddleware() negroni.Handler {
 
 		next(rw, rq)
 	})
+}
+
+type Error struct {
+	Message     string `json:"message"`
+	Code        string `json:"code"`
+	Description string `json:"description"`
+}
+
+type Response struct {
+	Error *Error      `json:"error"`
+	Data  interface{} `json:"data"`
+}
+
+func SendErrorResponse(w http.ResponseWriter, statusCode int, desc string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	json.NewEncoder(w).Encode(&Response{
+		Error: &Error{
+			Description: desc,
+		},
+		Data: nil,
+	})
+}
+
+// CustomClaims represents the custom claims in your JWT
+type CustomClaims struct {
+	TenantID string           `json:"tenantId"`
+	Expiry   *jwt.NumericDate `json:"exp,omitempty"`
+}
+
+// VerifyToken verifies the JWT token using the provided key
+func VerifyToken(tokenString string, key []byte) (*CustomClaims, error) {
+	tok, err := jwt.ParseSigned(tokenString)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse token: %w", err)
+	}
+
+	claims := CustomClaims{}
+	if err := tok.Claims(key, &claims); err != nil {
+		return nil, fmt.Errorf("failed to parse claims: %w", err)
+	}
+
+	if claims.Expiry != nil && time.Now().After(claims.Expiry.Time()) {
+		return nil, fmt.Errorf("token has expired")
+	}
+
+	return &claims, nil
 }

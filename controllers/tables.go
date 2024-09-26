@@ -66,6 +66,7 @@ func GetTablesByDatabaseAndSchema(w http.ResponseWriter, r *http.Request) {
 	// 	http.Error(w, err.Error(), http.StatusBadRequest)
 	// 	return
 	// }
+
 	requestWhere, values, err := config.PrestConf.Adapter.WhereByRequest(r, 3)
 	if err != nil {
 		err = fmt.Errorf("could not perform WhereByRequest: %v", err)
@@ -116,10 +117,16 @@ func GetTablesByDatabaseAndSchema(w http.ResponseWriter, r *http.Request) {
 // SelectFromTables perform select in database
 func SelectFromTables(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	database := vars["database"]
 	schema := vars["schema"]
 	table := vars["table"]
 	queries := r.URL.Query()
+
+	database, tenantErr := r.Context().Value("tenantId").(string)
+	if !tenantErr {
+		err := errors.New("could not get tenantId")
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	// if config.PrestConf.SingleDB && (config.PrestConf.Adapter.GetDatabase() != database) {
 	// 	err := fmt.Errorf("database not registered: %v", database)
@@ -259,9 +266,15 @@ func SelectFromTables(w http.ResponseWriter, r *http.Request) {
 // InsertInTables perform insert in specific table
 func InsertInTables(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	database := vars["database"]
 	schema := vars["schema"]
 	table := vars["table"]
+
+	database, tenantErr := r.Context().Value("tenantId").(string)
+	if !tenantErr {
+		err := errors.New("could not get tenantId")
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	// if config.PrestConf.SingleDB && (config.PrestConf.Adapter.GetDatabase() != database) {
 	// 	err := fmt.Errorf("database not registered: %v", database)
@@ -302,15 +315,21 @@ func InsertInTables(w http.ResponseWriter, r *http.Request) {
 // BatchInsertInTables perform insert in specific table from a batch request
 func BatchInsertInTables(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	database := vars["database"]
 	schema := vars["schema"]
 	table := vars["table"]
 
-	if config.PrestConf.SingleDB && (config.PrestConf.Adapter.GetDatabase() != database) {
-		err := fmt.Errorf("database not registered: %v", database)
+	database, tenantErr := r.Context().Value("tenantId").(string)
+	if !tenantErr {
+		err := errors.New("could not get tenantId")
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	//if config.PrestConf.SingleDB && (config.PrestConf.Adapter.GetDatabase() != database) {
+	//	err := fmt.Errorf("database not registered: %v", database)
+	//	http.Error(w, err.Error(), http.StatusBadRequest)
+	//	return
+	//}
 
 	names, placeholders, values, err := config.PrestConf.Adapter.ParseBatchInsertRequest(r)
 	if err != nil {
@@ -350,15 +369,23 @@ func BatchInsertInTables(w http.ResponseWriter, r *http.Request) {
 // DeleteFromTable perform delete sql
 func DeleteFromTable(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	database := vars["database"]
 	schema := vars["schema"]
 	table := vars["table"]
 
-	if config.PrestConf.SingleDB && (config.PrestConf.Adapter.GetDatabase() != database) {
-		err := fmt.Errorf("database not registered: %v", database)
+	database, tenantErr := r.Context().Value("tenantId").(string)
+	if !tenantErr {
+		err := errors.New("could not get tenantId")
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	//if config.PrestConf.SingleDB && (config.PrestConf.Adapter.GetDatabase() != database) {
+	//	err := fmt.Errorf("database not registered: %v", database)
+	//	http.Error(w, err.Error(), http.StatusBadRequest)
+	//	return
+	//}
+
+	fmt.Println("Delete Query")
 
 	where, values, err := config.PrestConf.Adapter.WhereByRequest(r, 1)
 	if err != nil {
@@ -408,15 +435,23 @@ func DeleteFromTable(w http.ResponseWriter, r *http.Request) {
 // UpdateTable perform update table
 func UpdateTable(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	database := vars["database"]
 	schema := vars["schema"]
 	table := vars["table"]
 
-	if config.PrestConf.SingleDB && (config.PrestConf.Adapter.GetDatabase() != database) {
-		err := fmt.Errorf("database not registered: %v", database)
+	database, tenantErr := r.Context().Value("tenantId").(string)
+	if !tenantErr {
+		err := errors.New("could not get tenantId")
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	fmt.Println("Update Query")
+
+	//if config.PrestConf.SingleDB && (config.PrestConf.Adapter.GetDatabase() != database) {
+	//	err := fmt.Errorf("database not registered: %v", database)
+	//	http.Error(w, err.Error(), http.StatusBadRequest)
+	//	return
+	//}
 
 	setSyntax, values, err := config.PrestConf.Adapter.SetByRequest(r, 1)
 	if err != nil {
@@ -477,12 +512,18 @@ func UpdateTable(w http.ResponseWriter, r *http.Request) {
 // ShowTable show information from table
 func ShowTable(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	tenantId := vars["database"] // tenantId
 	schema := vars["schema"]
 	table := vars["table"]
 
+	database, tenantErr := r.Context().Value("tenantId").(string)
+	if !tenantErr {
+		err := errors.New("could not get tenantId")
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	// set db name on ctx
-	ctx := context.WithValue(r.Context(), pctx.DBNameKey, tenantId)
+	ctx := context.WithValue(r.Context(), pctx.DBNameKey, database)
 
 	timeout, _ := ctx.Value(pctx.HTTPTimeoutKey).(int)
 	ctx, cancel := context.WithTimeout(ctx, time.Second*time.Duration(timeout))
