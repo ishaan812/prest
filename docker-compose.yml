@@ -13,3 +13,8 @@ services:
       - PREST_CACHE_ENABLED=false
     ports:
       - "3000:3000"
+    networks:
+      - stg-network
+networks:
+  stg-network:
+    external: true
