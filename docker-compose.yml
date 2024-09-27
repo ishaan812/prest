@@ -12,7 +12,7 @@ services:
       - PREST_JWT_DEFAULT=false # toggle to use jwt
       - PREST_CACHE_ENABLED=false
     ports:
-      - "3000:3000"
+      - "3032:3032"
     networks:
       - stg-network
 networks:
